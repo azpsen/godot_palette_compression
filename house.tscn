@@ -1,0 +1,105 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://res/scene.gltf" type="PackedScene" id=1]
+[ext_resource path="res://camera.gd" type="Script" id=2]
+[ext_resource path="res://control.gd" type="Script" id=3]
+
+[sub_resource type="Shader" id=2]
+code = "shader_type canvas_item;
+
+uniform vec4 color_1 : hint_color = vec4(0.25, 0.24, 0.35, 1.0);
+uniform vec4 color_2 : hint_color = vec4(0.25, 0.77, 0.74, 1.0);
+uniform vec4 color_3 : hint_color = vec4(0.75, 0.84, 0.71, 1.0);
+uniform vec4 color_4 : hint_color = vec4(0.9, 0.94, 0.77, 1.0);
+uniform vec4 color_5 : hint_color = vec4(0.95, 0.87, 0.64, 1.0);
+
+uniform bool enabled = true;
+
+vec4 nearest_color(vec4 color) {
+	float dist_col1 = pow(color_1.x - color.x, 2) + pow(color_1.y - color.y, 2) + pow(color_1.z - color.z, 2);
+	float dist_col2 = pow(color_2.x - color.x, 2) + pow(color_2.y - color.y, 2) + pow(color_2.z - color.z, 2);
+	float dist_col3 = pow(color_3.x - color.x, 2) + pow(color_3.y - color.y, 2) + pow(color_3.z - color.z, 2);
+	float dist_col4 = pow(color_4.x - color.x, 2) + pow(color_4.y - color.y, 2) + pow(color_4.z - color.z, 2);
+	float dist_col5 = pow(color_5.x - color.x, 2) + pow(color_5.y - color.y, 2) + pow(color_5.z - color.z, 2);
+	float closest = min(min(min(min(dist_col1, dist_col2), dist_col3), dist_col4), dist_col5);
+	if (closest == dist_col1) return color_1;
+	if (closest == dist_col2) return color_2;
+	if (closest == dist_col3) return color_3;
+	if (closest == dist_col4) return color_4;
+	if (closest == dist_col5) return color_5;
+	return vec4(0.0, 0.0, 0.0, 1.0);
+}
+
+void fragment() {
+	vec4 col = texture(TEXTURE, UV);
+	
+	if (enabled) {
+		COLOR = nearest_color(col);
+	} else {
+		COLOR = col;
+	}
+}"
+
+[sub_resource type="ShaderMaterial" id=3]
+shader = SubResource( 2 )
+shader_param/color_1 = Color( 0.25, 0.24, 0.35, 1 )
+shader_param/color_2 = Color( 0.25, 0.77, 0.74, 1 )
+shader_param/color_3 = Color( 0.75, 0.84, 0.71, 1 )
+shader_param/color_4 = Color( 0.9, 0.94, 0.77, 1 )
+shader_param/color_5 = Color( 0.95, 0.87, 0.64, 1 )
+shader_param/enabled = true
+
+[sub_resource type="Environment" id=1]
+background_mode = 1
+background_color = Color( 0.964706, 0.933333, 0.866667, 1 )
+ssao_enabled = true
+dof_blur_far_distance = 38.09
+dof_blur_far_transition = 8.36
+dof_blur_near_distance = 17.84
+dof_blur_near_transition = 8.89
+
+[node name="Node2D" type="Node2D"]
+
+[node name="Control" type="Control" parent="."]
+margin_right = 1280.0
+margin_bottom = 720.0
+script = ExtResource( 3 )
+
+[node name="ViewportContainer" type="ViewportContainer" parent="Control"]
+material = SubResource( 3 )
+margin_right = 1280.0
+margin_bottom = 720.0
+stretch = true
+
+[node name="Viewport" type="Viewport" parent="Control/ViewportContainer"]
+size = Vector2( 320, 180 )
+handle_input_locally = false
+render_target_update_mode = 3
+
+[node name="Camera" type="Camera" parent="Control/ViewportContainer/Viewport"]
+transform = Transform( 0.253939, -0.193275, -0.947713, 0.0500234, 0.981145, -0.18669, 0.965926, 3.84801e-09, 0.258819, -39.2218, 11.04, 0 )
+current = true
+script = ExtResource( 2 )
+
+[node name="scene" parent="Control/ViewportContainer/Viewport" instance=ExtResource( 1 )]
+transform = Transform( 250, 0, 0, 0, 250, 0, 0, 0, 250, 0, 0, 0 )
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="Control/ViewportContainer/Viewport"]
+environment = SubResource( 1 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="Control/ViewportContainer/Viewport"]
+transform = Transform( 0.631881, 0.552161, -0.543916, 0.775066, -0.450155, 0.443434, 0, -0.701768, -0.712405, 0, 0, 0 )
+
+[node name="CheckBox" type="CheckBox" parent="Control"]
+margin_right = 24.0
+margin_bottom = 24.0
+custom_colors/font_color_disabled = Color( 0, 0, 0, 1 )
+custom_colors/font_color_focus = Color( 0, 0, 0, 1 )
+custom_colors/font_color_hover_pressed = Color( 0, 0, 0, 1 )
+custom_colors/font_color = Color( 0, 0, 0, 1 )
+custom_colors/font_color_hover = Color( 0, 0, 0, 1 )
+custom_colors/font_color_pressed = Color( 0, 0, 0, 1 )
+pressed = true
+text = "Palette Compression"
+
+[connection signal="toggled" from="Control/CheckBox" to="Control" method="_on_CheckBox_toggled"]
